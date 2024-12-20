@@ -29,13 +29,13 @@ RUN apt-get update && apt-get install -y \
     curl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install Google Chrome version 114
+# Install Google Chrome
 RUN curl -sSL https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -o google-chrome.deb && \
     dpkg -i google-chrome.deb || apt-get install -fy && \
     rm google-chrome.deb
 
-# Set ChromeDriver version to match Chrome version
-ENV CHROME_DRIVER_VERSION=114.0.5735.90
+# Set the ChromeDriver version to match the installed Chrome version (131)
+ENV CHROME_DRIVER_VERSION=131.0.6778.204
 
 # Download and install ChromeDriver
 RUN wget -N https://chromedriver.storage.googleapis.com/$CHROME_DRIVER_VERSION/chromedriver_linux64.zip && \
