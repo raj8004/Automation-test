@@ -2,7 +2,8 @@
 FROM python:3.9-slim
 
 # Install necessary dependencies for Google Chrome and ChromeDriver
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && \
+    apt-get install -y \
     wget \
     curl \
     unzip \
@@ -21,7 +22,8 @@ RUN apt-get update && apt-get install -y \
     libpango1.0-0 \
     libgdk-pixbuf2.0-0 \
     libatspi2.0-0 \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
 # Install Google Chrome 114
 RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - && \
