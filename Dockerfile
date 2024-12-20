@@ -1,4 +1,3 @@
-
 # Step 1: Use the Python base image
 FROM python:3.9-slim
 
@@ -35,9 +34,8 @@ RUN curl -sSL https://dl.google.com/linux/direct/google-chrome-stable_current_am
     dpkg -i google-chrome.deb || apt-get install -fy && \
     rm google-chrome.deb
 
-# Step 5: Install ChromeDriver matching the installed version of Chrome
-RUN LATEST_DRIVER_VERSION=$(curl -sSL https://chromedriver.storage.googleapis.com/LATEST_RELEASE_131) && \
-    wget -N https://chromedriver.storage.googleapis.com/$LATEST_DRIVER_VERSION/chromedriver_linux64.zip && \
+# Step 5: Manually specify the ChromeDriver version (match the version with Chrome version 131.x)
+RUN wget -N https://chromedriver.storage.googleapis.com/131.0.6778.24/chromedriver_linux64.zip && \
     unzip chromedriver_linux64.zip && \
     mv chromedriver /usr/bin/chromedriver && \
     chmod +x /usr/bin/chromedriver && \
