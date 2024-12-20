@@ -1,62 +1,20 @@
-# Use the official Python 3.9 image as the base image
+# Use the official Python image from Docker Hub
 FROM python:3.9-slim
 
-# Install necessary dependencies for Google Chrome and ChromeDriver
-RUN apt-get update && \
-    apt-get install -y \
-    wget \
-    curl \
-    unzip \
-    gnupg \
-    ca-certificates \
-    libx11-dev \
-    libxcomposite-dev \
-    libxrandr-dev \
-    libgtk-3-dev \
-    libgbm-dev \
-    libasound2 \
-    libnss3 \
-    libxss1 \
-    libappindicator3-1 \
-    libindicator3-7 \
-    libpango1.0-0 \
-    libgdk-pixbuf2.0-0 \
-    libatspi2.0-0 \
-    && echo "APT packages installed successfully!" \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean \
-    || { echo "Error during apt-get install" && exit 1; }
-
-# Install Google Chrome 114
-RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - && \
-    sh -c 'echo "deb [arch=amd64] https://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list' && \
-    apt-get update && \
-    apt-get install -y google-chrome-stable=114.0.5735.90-1 && \
-    apt-get clean \
-    || { echo "Error installing Google Chrome" && exit 1; }
-
-# Install ChromeDriver 114.0.5735.90
-RUN LATEST_DRIVER_VERSION=$(curl -sSL https://chromedriver.storage.googleapis.com/LATEST_RELEASE_114) && \
-    wget -N https://chromedriver.storage.googleapis.com/$LATEST_DRIVER_VERSION/chromedriver_linux64.zip && \
-    unzip chromedriver_linux64.zip && \
-    mv chromedriver /usr/local/bin/chromedriver && \
-    chmod +x /usr/local/bin/chromedriver && \
-    rm chromedriver_linux64.zip \
-    || { echo "Error installing ChromeDriver" && exit 1; }
-
-# Install Python dependencies
-COPY requirements.txt /app/requirements.txt
+# Set the working directory inside the container
 WORKDIR /app
+
+# Copy the requirements.txt into the container
+COPY requirements.txt /app/
+
+# Install the required Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Set environment variables for Chrome
-ENV PATH=$PATH:/usr/local/bin
-
 # Copy the rest of the application code into the container
-COPY . /app
+COPY . /app/
 
-# Expose the port that the Flask app will run on
+# Expose port 8080 to access the app
 EXPOSE 8080
 
-# Run the application when the container starts
+# Run the Flask app
 CMD ["python", "app.py"]
