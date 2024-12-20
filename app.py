@@ -1,71 +1,42 @@
-from flask import Flask, request, jsonify
+from flask import Flask, jsonify
 from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
+import time
 
 app = Flask(__name__)
 
-@app.route('/api/login', methods=['POST'])
-def login():
-    try:
-        # Get email and password from frontend request
-        data = request.json
-        email = data.get('email')
-        password = data.get('password')
+# Function to initialize the Selenium WebDriver with Chrome
+def get_chrome_driver():
+    # Set Chrome options for headless mode (no GUI)
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")  # Run in headless mode
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--remote-debugging-port=9222")
+    
+    # Path to chromedriver (it should be installed in the Docker container)
+    driver = webdriver.Chrome(executable_path='/usr/local/bin/chromedriver', options=chrome_options)
+    return driver
 
-        if not email or not password:
-            return jsonify({"status": False, "message": "Email and password are required"}), 400
+@app.route('/')
+def hello_world():
+    # Use Selenium to open Google
+    driver = get_chrome_driver()
+    
+    # Open a website
+    driver.get("https://www.google.com")
+    
+    # Get the page title to confirm the browser worked
+    page_title = driver.title
 
-        # Set up Selenium WebDriver
-        chrome_options = Options()
-        chrome_options.add_argument("--headless")  # Run in headless mode (no browser UI)
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--disable-dev-shm-usage")
-
-        driver = webdriver.Chrome(options=chrome_options)
-
-        try:
-            # Open Facebook login page
-            driver.get("https://www.facebook.com/")
-
-            # Find and fill the email field
-            email_field = driver.find_element(By.ID, "email")
-            email_field.send_keys(email)
-
-            # Find and fill the password field
-            password_field = driver.find_element(By.ID, "pass")
-            password_field.send_keys(password)
-
-            # Click the login button
-            login_button = driver.find_element(By.NAME, "login")
-            login_button.click()
-
-            # Wait for the page to load and check for success or error
-            driver.implicitly_wait(5)
-
-            # Example success check (modify this based on actual Facebook structure)
-            if "Home" in driver.title:
-                message = "Login successful"
-                status = True
-            else:
-                message = "Login failed. Please check your credentials."
-                status = False
-
-        except Exception as e:
-            driver.quit()
-            return jsonify({"status": False, "message": f"An error occurred: {str(e)}"}), 500
-
-        finally:
-            # Close the browser
-            driver.quit()
-
-        # Return success or error message to frontend
-        return jsonify({"status": status, "message": message})
-
-    except Exception as e:
-        return jsonify({"status": False, "message": f"An unexpected error occurred: {str(e)}"}), 500
-
+    # Sleep for a moment to let the page load
+    time.sleep(2)
+    
+    # Close the driver
+    driver.quit()
+    
+    # Return the title of the page as a response
+    return jsonify(message=f"Successfully opened Google. Page title is: {page_title}")
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(port=8080, host='0.0.0.0')
