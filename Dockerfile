@@ -37,12 +37,16 @@ RUN curl -sSL https://dl.google.com/linux/direct/google-chrome-stable_current_am
 # Set the ChromeDriver version to match the installed Chrome version (131)
 ENV CHROME_DRIVER_VERSION=131.0.6778.204
 
+# Print the ChromeDriver version for debugging purposes
+RUN echo "ChromeDriver Version: $CHROME_DRIVER_VERSION"
+
 # Download and install ChromeDriver
-RUN wget -N https://chromedriver.storage.googleapis.com/$CHROME_DRIVER_VERSION/chromedriver_linux64.zip && \
-    unzip chromedriver_linux64.zip && \
-    mv chromedriver /usr/bin/chromedriver && \
-    chmod +x /usr/bin/chromedriver && \
-    rm chromedriver_linux64.zip
+RUN wget -N https://chromedriver.storage.googleapis.com/$CHROME_DRIVER_VERSION/chromedriver_linux64.zip \
+    && unzip chromedriver_linux64.zip \
+    && mv chromedriver /usr/bin/chromedriver \
+    && chmod +x /usr/bin/chromedriver \
+    && rm chromedriver_linux64.zip \
+    || { echo 'Failed to download or unzip ChromeDriver'; exit 1; }
 
 # Copy the project files into the container
 WORKDIR /app
