@@ -1,42 +1,56 @@
-from flask import Flask, jsonify
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-import time
+# Use the official Python 3.9 image as the base image
+FROM python:3.9-slim
 
-app = Flask(__name__)
+# Install necessary dependencies for Google Chrome and ChromeDriver
+RUN apt-get update && apt-get install -y \
+    wget \
+    curl \
+    unzip \
+    gnupg \
+    ca-certificates \
+    libx11-dev \
+    libxcomposite-dev \
+    libxrandr-dev \
+    libgtk-3-dev \
+    libgbm-dev \
+    libasound2 \
+    libnss3 \
+    libxss1 \
+    libappindicator3-1 \
+    libindicator3-7 \
+    libpango1.0-0 \
+    libgdk-pixbuf2.0-0 \
+    libatspi2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
 
-# Function to initialize the Selenium WebDriver with Chrome
-def get_chrome_driver():
-    # Set Chrome options for headless mode (no GUI)
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")  # Run in headless mode
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--remote-debugging-port=9222")
-    
-    # Path to chromedriver (it should be installed in the Docker container)
-    driver = webdriver.Chrome(executable_path='/usr/local/bin/chromedriver', options=chrome_options)
-    return driver
+# Install Google Chrome 114
+RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - && \
+    sh -c 'echo "deb [arch=amd64] https://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list' && \
+    apt-get update && \
+    apt-get install -y google-chrome-stable=114.0.5735.90-1 && \
+    apt-get clean
 
-@app.route('/')
-def hello_world():
-    # Use Selenium to open Google
-    driver = get_chrome_driver()
-    
-    # Open a website
-    driver.get("https://www.google.com")
-    
-    # Get the page title to confirm the browser worked
-    page_title = driver.title
+# Install ChromeDriver 114.0.5735.90
+RUN LATEST_DRIVER_VERSION=$(curl -sSL https://chromedriver.storage.googleapis.com/LATEST_RELEASE_114) && \
+    wget -N https://chromedriver.storage.googleapis.com/$LATEST_DRIVER_VERSION/chromedriver_linux64.zip && \
+    unzip chromedriver_linux64.zip && \
+    mv chromedriver /usr/local/bin/chromedriver && \
+    chmod +x /usr/local/bin/chromedriver && \
+    rm chromedriver_linux64.zip
 
-    # Sleep for a moment to let the page load
-    time.sleep(2)
-    
-    # Close the driver
-    driver.quit()
-    
-    # Return the title of the page as a response
-    return jsonify(message=f"Successfully opened Google. Page title is: {page_title}")
+# Install Python dependencies
+COPY requirements.txt /app/requirements.txt
+WORKDIR /app
+RUN pip install --no-cache-dir -r requirements.txt
 
-if __name__ == '__main__':
-    app.run(port=8080, host='0.0.0.0')
+# Set environment variables for Chrome
+ENV PATH=$PATH:/usr/local/bin
+
+# Copy the rest of the application code into the container
+COPY . /app
+
+# Expose the port that the Flask app will run on
+EXPOSE 8080
+
+# Run the application when the container starts
+CMD ["python", "app.py"]
