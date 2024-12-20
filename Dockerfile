@@ -1,50 +1,57 @@
 # Use the official Python image
 FROM python:3.9-slim
 
-# Set working directory in the container
-WORKDIR /app
+# Set environment variables to prevent interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Install system dependencies
+# Install required packages and dependencies
 RUN apt-get update && apt-get install -y \
     wget \
-    gnupg \
     unzip \
     libnss3 \
     libgconf-2-4 \
-    libxss1 \
-    fonts-liberation \
-    libappindicator3-1 \
-    xdg-utils \
-    libgbm-dev \
+    libx11-xcb1 \
+    libxcomposite1 \
+    libxcursor1 \
+    libxdamage1 \
+    libxi6 \
+    libxtst6 \
+    libpangocairo-1.0-0 \
+    libpangoft2-1.0-0 \
+    libatk1.0-0 \
+    libcups2 \
+    libxrandr2 \
     libasound2 \
-    libatk-bridge2.0-0 \
     libgtk-3-0 \
-    --no-install-recommends && rm -rf /var/lib/apt/lists/*
+    libgbm-dev \
+    libxshmfence-dev \
+    fonts-liberation \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install Google Chrome
-RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
-    dpkg -i google-chrome-stable_current_amd64.deb || apt-get -fy install && \
-    rm google-chrome-stable_current_amd64.deb
+# Install Google Chrome version 114
+RUN wget https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_114.0.5735.90-1_amd64.deb && \
+    dpkg -i google-chrome-stable_114.0.5735.90-1_amd64.deb || apt-get -fy install && \
+    rm google-chrome-stable_114.0.5735.90-1_amd64.deb
 
-# Install ChromeDriver (ensure version compatibility)
-RUN CHROME_DRIVER_VERSION=$(curl -sS https://chromedriver.storage.googleapis.com/LATEST_RELEASE) && \
-    wget -N https://chromedriver.storage.googleapis.com/$CHROME_DRIVER_VERSION/chromedriver_linux64.zip && \
+# Set ChromeDriver version to match Chrome version
+ENV CHROME_DRIVER_VERSION=114.0.5735.90
+
+# Download and install ChromeDriver
+RUN wget -N https://chromedriver.storage.googleapis.com/$CHROME_DRIVER_VERSION/chromedriver_linux64.zip && \
     unzip chromedriver_linux64.zip && \
     mv chromedriver /usr/bin/chromedriver && \
     chmod +x /usr/bin/chromedriver && \
     rm chromedriver_linux64.zip
 
-# Add ChromeDriver to PATH
-ENV PATH=$PATH:/usr/bin/chromedriver
-
-# Copy the application files
-COPY . /app
+# Copy the project files into the container
+WORKDIR /app
+COPY . .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose port 5000
+# Expose the application port
 EXPOSE 5000
 
-# Run the application
+# Command to run the Flask app
 CMD ["python", "app.py"]
