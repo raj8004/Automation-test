@@ -22,15 +22,18 @@ RUN apt-get update && \
     libpango1.0-0 \
     libgdk-pixbuf2.0-0 \
     libatspi2.0-0 \
+    && echo "APT packages installed successfully!" \
     && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
+    && apt-get clean \
+    || { echo "Error during apt-get install" && exit 1; }
 
 # Install Google Chrome 114
 RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - && \
     sh -c 'echo "deb [arch=amd64] https://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list' && \
     apt-get update && \
     apt-get install -y google-chrome-stable=114.0.5735.90-1 && \
-    apt-get clean
+    apt-get clean \
+    || { echo "Error installing Google Chrome" && exit 1; }
 
 # Install ChromeDriver 114.0.5735.90
 RUN LATEST_DRIVER_VERSION=$(curl -sSL https://chromedriver.storage.googleapis.com/LATEST_RELEASE_114) && \
@@ -38,7 +41,8 @@ RUN LATEST_DRIVER_VERSION=$(curl -sSL https://chromedriver.storage.googleapis.co
     unzip chromedriver_linux64.zip && \
     mv chromedriver /usr/local/bin/chromedriver && \
     chmod +x /usr/local/bin/chromedriver && \
-    rm chromedriver_linux64.zip
+    rm chromedriver_linux64.zip \
+    || { echo "Error installing ChromeDriver" && exit 1; }
 
 # Install Python dependencies
 COPY requirements.txt /app/requirements.txt
