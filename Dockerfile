@@ -29,8 +29,8 @@ RUN apt-get update && apt-get install -y \
     curl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install Google Chrome
-RUN curl -sSL https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -o google-chrome.deb && \
+# Set Chrome version to 131 to match ChromeDriver
+RUN curl -sSL https://dl.google.com/linux/direct/google-chrome-stable_131.0.6778.204-1_amd64.deb -o google-chrome.deb && \
     dpkg -i google-chrome.deb || apt-get install -fy && \
     rm google-chrome.deb
 
