@@ -26,12 +26,13 @@ RUN apt-get update && apt-get install -y \
     libgbm-dev \
     libxshmfence-dev \
     fonts-liberation \
+    curl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install Google Chrome version 114
-RUN wget https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_114.0.5735.90-1_amd64.deb && \
-    dpkg -i google-chrome-stable_114.0.5735.90-1_amd64.deb || apt-get -fy install && \
-    rm google-chrome-stable_114.0.5735.90-1_amd64.deb
+RUN curl -sSL https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -o google-chrome.deb && \
+    dpkg -i google-chrome.deb || apt-get install -fy && \
+    rm google-chrome.deb
 
 # Set ChromeDriver version to match Chrome version
 ENV CHROME_DRIVER_VERSION=114.0.5735.90
