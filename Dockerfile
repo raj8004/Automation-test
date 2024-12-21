@@ -40,4 +40,4 @@ COPY . /app
 EXPOSE 8080
 
 # Command to run your script
-CMD ["python", "your_script.py"]
+CMD ["python", "app.py"]
