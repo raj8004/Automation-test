@@ -1,53 +1,43 @@
-# Use Python 3.9 as the base image
-FROM python:3.9-slim
+# Use Python as the base image
+FROM python:3.10-slim
 
-# Install necessary dependencies for running Selenium with Chrome
+# Install necessary dependencies
 RUN apt-get update && apt-get install -y \
     wget \
-    curl \
     unzip \
-    gnupg \
-    ca-certificates \
-    libx11-dev \
-    libxcomposite-dev \
-    libxrandr-dev \
-    libgtk-3-dev \
-    libgbm-dev \
-    libasound2 \
+    curl \
+    xvfb \
+    libxi6 \
+    libgconf-2-4 \
+    default-jdk \
     libnss3 \
-    libxss1 \
+    fonts-liberation \
     libappindicator3-1 \
-    libindicator3-7 \
-    libpango1.0-0 \
-    libgdk-pixbuf2.0-0 \
-    libatspi2.0-0 \
-    && rm -rf /var/lib/apt/lists/* && apt-get clean
+    xdg-utils \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install Google Chrome (latest version)
-RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && echo "deb [arch=amd64] https://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
-    && apt-get update \
-    && apt-get install -y google-chrome-stable
+# Install Chrome
+RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
+    && dpkg -i google-chrome-stable_current_amd64.deb || apt-get -fy install
 
-# Install ChromeDriver (download the latest stable version)
-RUN CHROME_DRIVER_VERSION=`curl -sSL https://chromedriver.storage.googleapis.com/LATEST_RELEASE` \
-    && wget https://chromedriver.storage.googleapis.com/${CHROME_DRIVER_VERSION}/chromedriver_linux64.zip \
-    && unzip chromedriver_linux64.zip \
-    && mv chromedriver /usr/bin/chromedriver \
-    && chmod +x /usr/bin/chromedriver \
-    && rm chromedriver_linux64.zip
+# Install ChromeDriver
+RUN CHROMEDRIVER_VERSION=$(curl -sS https://chromedriver.storage.googleapis.com/LATEST_RELEASE) && \
+    wget -N https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip -P ~/ && \
+    unzip ~/chromedriver_linux64.zip -d /usr/local/bin/ && \
+    rm ~/chromedriver_linux64.zip
 
-# Set up working directory
+# Set display for headless Chrome
+ENV DISPLAY=:99
+
+# Install Selenium Python package
+RUN pip install selenium
+
+# Add your app to the container
 WORKDIR /app
-
-# Copy the project files into the container
 COPY . /app
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Expose any required ports
+EXPOSE 8080
 
-# Expose the port the app will run on
-EXPOSE 5000
-
-# Command to run the Flask app
-CMD ["python", "app.py"]
+# Command to run your script
+CMD ["python", "your_script.py"]
