@@ -50,7 +50,7 @@ def check_webdriver():
         driver.get("https://www.google.com")
         title = driver.title
         driver.quit()
-        return jsonify({"status": "success", "message": f"WebDriver is working. Title: {title}"})
+        return jsonify({"status": "succes", "message": f"WebDriver is working. Title: {title}"})
     except Exception as e:
         return jsonify({"status": "error", "message": f"WebDriver is not working. Error: {str(e)}"})
 
